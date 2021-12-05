@@ -1,0 +1,8 @@
+2021-12-04 01:07:35,266 - INFO - Setting up environment:
+2021-12-04 01:07:35,266 - INFO - Starting balance: 1000000.0
+2021-12-04 01:07:35,266 - INFO - Maximum action: 10000.0
+2021-12-04 01:07:35,266 - INFO - Trading fee: 0.01
+2021-12-04 01:07:35,266 - INFO - History: 4
+2021-12-04 01:07:35,266 - INFO - Reward Scaling: 1.0
+2021-12-04 01:07:35,266 - INFO - Episode Length: 8192
+2021-12-04 01:07:35,267 - INFO - Vectorized: False

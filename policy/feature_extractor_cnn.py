@@ -4,9 +4,8 @@ import torch.nn as nn
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from torch.nn.modules.activation import SiLU
 
-from price_feature_extractor import PriceFeatureExtractor
+from price_feature_extractor_cnn import PriceFeatureExtractorCNN
 
 
 class CustomCombinedExtractor(BaseFeaturesExtractor):
@@ -18,30 +17,30 @@ class CustomCombinedExtractor(BaseFeaturesExtractor):
 
         extractors = {}
 
-        total_concat_size = 0
         # We need to know size of the output of this extractor,
         # so go over all the spaces and compute output feature sizes
         for key, subspace in observation_space.spaces.items():
             if key == 'price':
                 # We will just downsample one channel of the image by 4x4 and flatten.
                 # Assume the image is single-channel (subspace.shape[0] == 0)
-                extractors[key] = PriceFeatureExtractor(subspace.shape[1], subspace.shape[2], subspace.shape[0], 3, 32)
+                extractors[key] = PriceFeatureExtractorCNN(subspace.shape[1], subspace.shape[2], subspace.shape[0], 3, 256)
             elif key == 'account':
                 # Run through a simple MLP
                 extractors[key] = nn.Sequential(
                     nn.Linear(subspace.shape[0], 32),
-                    nn.SiLU()
+                    nn.GELU()
                 )
 
         self.extractors = nn.ModuleDict(extractors)
 
         self.mlp = nn.Sequential(
-            nn.Linear(64, features_dim),
-            nn.SiLU()
+            nn.LayerNorm(256 + 32),
+            nn.Linear(256 + 32, features_dim),
+            nn.GELU()
         )
 
         # Update the features dim manually
-        self._features_dim = 64
+        self._features_dim = 256
 
     def forward(self, observations) -> torch.Tensor:
         encoded_tensor_list = []

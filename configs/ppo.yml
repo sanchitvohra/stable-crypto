@@ -1,0 +1,39 @@
+name: ppo
+
+logging:
+  logging: yes
+  tensorboard: yes
+
+environment:
+  starting-balance: !!float 1e6
+  maximum-action: !!float 1e4
+  trading-fee: !!float 1e-2
+  history: 4
+  reward-scaling: !!float 1
+  episode-length: 8192
+  vectorized: no
+  vectorized-size: 8
+
+policy:
+  price:
+    feature-extractor: MLP # MLP CNN ATTN
+    type: default 
+  account:
+    feature-extractor: MLP
+
+  shared-net: [256, 256]
+  policy-net: [128, 128]
+  value-net: [128, 128]
+  activation: ReLU, # ReLU, GELU, Tanh
+
+agent:
+  name: PPO
+  n_steps: !!float 1e5
+  batch-size: 1024
+  learning-rate: !!float 1e-3
+
+train:
+  timesteps: !!float 1e8
+  model-save-freq: !!float 1e7
+  validation-freq: !!float 1e7
+  plot-trajectory-freq: !!float 1e7

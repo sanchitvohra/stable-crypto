@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.activation import SiLU
 
-class PriceFeatureExtractor(nn.Module):
+class PriceFeatureExtractorCNN(nn.Module):
     def __init__(self, coins, dimensions, history, kernel_width, out_shape):
-        super(PriceFeatureExtractor, self).__init__()
+        super(PriceFeatureExtractorCNN, self).__init__()
 
         self.cnn_extractor = nn.Sequential(
-            nn.Conv2d(coins, 64, (dimensions, kernel_width), padding=(0, 1)),
-            nn.SiLU(),
-            nn.Conv2d(64, 32, (1, kernel_width), padding=(0, 1)),
-            nn.SiLU()
+            nn.Conv2d(coins, 128, (dimensions, kernel_width), padding=(0, 1)),
+            nn.BatchNorm2d(128),
+            nn.GELU(),
+            nn.Conv2d(128, 128, (1, kernel_width), padding=(0, 1)),
+            nn.BatchNorm2d(128),
+            nn.GELU(),
         )
 
         dummy = torch.rand((1, coins, dimensions, history))
@@ -19,11 +21,15 @@ class PriceFeatureExtractor(nn.Module):
         dummy_out_shape = dummy_out.shape[1]
 
         self.mlp_extractor = nn.Sequential(
+            nn.LayerNorm(dummy_out_shape),
             nn.Linear(dummy_out_shape, out_shape),
-            nn.SiLU(),
+            nn.GELU(),
         )
 
     def forward(self, price):
+        # price : (B, N, C, D)
         price = price.permute(0, 2, 3, 1)
+        # price : (B, C, D, N)
         cnn_out = self.cnn_extractor(price)
+        # cnn_out : (B, 64, D, N)
         return self.mlp_extractor(cnn_out.view(cnn_out.shape[0], -1))
